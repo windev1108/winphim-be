@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Movie } from './movie.entity';
 import { Cinema } from './cinema.entity';
+import { Comment } from './comment.entity';
 
 @Entity('users')
 export class User {
@@ -30,6 +31,10 @@ export class User {
 
     @OneToMany(() => Movie, (movie) => movie.user)
     movies: Movie[];
+
+
+    @OneToMany(() => Comment, (comment) => comment.user)
+    comments: Comment[];
 
     @OneToMany(() => Cinema, (room) => room.host)
     hostedRooms: Cinema[];

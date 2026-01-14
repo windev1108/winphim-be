@@ -22,7 +22,7 @@ export class MovieController {
         return { data: movie };
     }
 
-    @Get('/mine')
+    @Get('mine')
     async getUserMovies(@Request() req) {
         const userId = req.user.id.toString();
         const movies = await this.movieService.getUserMovies(userId);

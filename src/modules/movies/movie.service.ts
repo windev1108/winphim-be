@@ -16,6 +16,11 @@ export class MovieService {
         if (movieExist) {
             throw new BadRequestException('Bạn đã thêm phim này rồi!');
         }
+        const LIMIT_FAVORITES = process.env.LIMIT_FAVORITE_MOVIES_PER_USER ? +process.env.LIMIT_FAVORITE_MOVIES_PER_USER! : 20
+        const countMovies = await this.movieRepo.count({ where: { id: userId } })
+        if (countMovies >= LIMIT_FAVORITES) {
+            throw new BadRequestException(`Bạn chỉ được thêm tối đa ${LIMIT_FAVORITES}`);
+        }
         const movie = this.movieRepo.create({ user: { id: userId }, country: data.countryName, category: data.categoryName, ...data });
         return await this.movieRepo.save(movie);
     }

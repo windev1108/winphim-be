@@ -9,6 +9,8 @@ import { Cinema } from './database/entities/cinema.entity';
 import { Movie } from './database/entities/movie.entity';
 import { AuthModule } from './modules/auth/auth.module';
 import { MovieModule } from './modules/movies/movie.module';
+import { Comment } from './database/entities/comment.entity';
+import { CommentModule } from './modules/comments/comment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -16,12 +18,8 @@ import { MovieModule } from './modules/movies/movie.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST,
-      port: +process.env.DB_PORT! || 5432,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      entities: [User, Cinema, Movie],
+      url: process.env.POSTGRESQL_URL,
+      entities: [User, Cinema, Movie, Comment],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
     }),
@@ -30,6 +28,7 @@ import { MovieModule } from './modules/movies/movie.module';
     AuthModule,
     CinemaModule,
     MovieModule,
+    CommentModule
   ],
 })
 export class AppModule { }
