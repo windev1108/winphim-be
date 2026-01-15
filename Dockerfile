@@ -5,11 +5,11 @@ FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
-# Copy package files và lock file
-COPY package.json bun.lockb ./
+# Copy package files
+COPY package.json ./
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy source code
 COPY . .
@@ -44,12 +44,6 @@ USER nodejs
 
 # Expose port
 EXPOSE 3000
-
-# Sử dụng dumb-init để run application
-ENTRYPOINT ["dumb-init", "--"]
-
-# Run ứng dụng
-CMD ["node", "dist/main.js"]
 
 EXPOSE 5000
 
