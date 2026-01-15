@@ -5,7 +5,6 @@ import session from 'express-session';
 import { createClient } from 'redis';
 import RedisStore from 'connect-redis';
 import { Server } from 'socket.io';
-import { getAllowedOrigins } from './config/cors.config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import passport from 'passport';
 
