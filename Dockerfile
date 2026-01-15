@@ -1,52 +1,55 @@
-# Stage 1: Dependencies
-FROM node:20-alpine AS dependencies
+# ============================================================================
+# Stage 1: Builder - Build ứng dụng với Bun
+# ============================================================================
+FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy package files và lock file
+COPY package.json bun.lockb ./
 
-RUN npm ci --legacy-peer-deps
+# Install dependencies
+RUN bun install --frozen-lockfile
 
-
-# Stage 2: Build
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-COPY package*.json ./
-
-RUN npm ci --legacy-peer-deps
-
+# Copy source code
 COPY . .
 
-RUN npm run build
+# Build ứng dụng
+RUN bun run build
 
-# Cleanup
-RUN rm -rf node_modules
-
-
-# Stage 3: Production
+# ============================================================================
+# Stage 2: Production - Runtime image
+# ============================================================================
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dumb-init để handle signals đúng cách
+# Install dumb-init để xử lý signals đúng cách (graceful shutdown)
 RUN apk add --no-cache dumb-init
 
-# Copy dependencies từ stage 1
-COPY --from=dependencies /app/node_modules ./node_modules
-
 # Copy package files
-COPY package*.json ./
+COPY package.json .
 
-# Copy built application từ stage 2
+# Install production dependencies với npm (lightweight)
+RUN npm install --omit=dev --no-save
+
+# Copy built application từ builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create non-root user cho security
+# Create non-root user cho bảo mật
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
 USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Sử dụng dumb-init để run application
+ENTRYPOINT ["dumb-init", "--"]
+
+# Run ứng dụng
+CMD ["node", "dist/main.js"]
 
 EXPOSE 5000
 
