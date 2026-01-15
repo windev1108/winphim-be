@@ -13,7 +13,7 @@ export class CommentService {
     ) { }
 
     async addComment(userId: number, data: AddCommentMovieDto) {
-        const movieExist = await this.commentRepo.findOne({ where: { user: { id: userId } } });
+        const movieExist = await this.commentRepo.findOne({ where: { user: { id: userId }, movieId: data.movieId } });
         if (movieExist) {
             throw new BadRequestException('Bạn đã bình luận phim này rồi!');
         }
