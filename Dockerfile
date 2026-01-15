@@ -1,56 +1,20 @@
-# ============================================================================
-# Stage 1: Builder - Build ứng dụng với Bun
-# ============================================================================
-FROM oven/bun:latest AS builder
+# Base image
+FROM node:18
 
-WORKDIR /app
+# Create app directory
+WORKDIR /usr/src/app
 
-# Copy package files
-COPY package.json ./
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+COPY package*.json ./
 
-# Install dependencies
-RUN bun install
+# Install app dependencies
+RUN npm install
 
-# Copy source code
+# Bundle app source
 COPY . .
 
-# Build ứng dụng
-RUN bun run build
+# Creates a "dist" folder with the production build
+RUN npm run build
 
-# ============================================================================
-# Stage 2: Production - Runtime image
-# ============================================================================
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Install dumb-init để xử lý signals đúng cách (graceful shutdown)
-RUN apk add --no-cache dumb-init
-
-# Copy package files
-COPY package.json .
-
-# Install production dependencies với npm (lightweight)
-RUN npm install --omit=dev --no-save
-
-# Copy built application từ builder stage
-COPY --from=builder /app/dist ./dist
-
-# Create non-root user cho bảo mật
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-USER nodejs
-
-# Expose port
-EXPOSE 3000
-
-EXPOSE 5000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:5000/health', (res) => {if (res.statusCode !== 200) throw new Error(res.statusCode)})"
-
-# Sử dụng dumb-init để quản lý process
-ENTRYPOINT ["dumb-init", "--"]
-
-CMD ["node", "--max-old-space-size=256", "dist/main.js"]
+# Start the server using the production build
+CMD [ "node", "dist/main.js" ]
