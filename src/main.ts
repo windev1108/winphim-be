@@ -70,7 +70,7 @@ async function bootstrap() {
   console.log(`🚀 Cinema Service running on: http://localhost:${PORT} 
     🔌 WebSocket available on: ws://localhost:${PORT} 
     📊 Redis: ${process.env.REDIS_URL} 
-    🗄️ Database: ${process.env.DB_NAME} 
+    🗄️ Database: ${process.env.REDIS_URL} 
     🚀 Swagger: http://localhost:${PORT}/api/docs`)
 }
 
