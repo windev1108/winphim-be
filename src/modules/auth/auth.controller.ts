@@ -28,12 +28,12 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body() dto: RegisterDto,
-    @Session() session: Record<string, any>,
+    @Req() req: any
   ) {
-    const result = await this.authService.register(dto);
+    const result = await this.authService.register(dto, req.sessionID);
 
     // Save to session
-    session.user = result.user
+    req.session.user = result.user
 
     return result;
   }
@@ -43,12 +43,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: LoginDto,
-    @Session() session: Record<string, any>,
+    @Req() req: any
   ) {
-    const result = await this.authService.loginWithEmail(dto);
-
+    const result = await this.authService.loginWithEmail(dto, req.sessionID);
     // Save to session
-    session.user = result.user
+    req.session.user = result.user
 
     return result;
   }

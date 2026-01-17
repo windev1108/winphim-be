@@ -9,7 +9,7 @@ import { UserService } from '../users/user.service';
 export class AuthService {
     constructor(private readonly usersService: UserService) { }
 
-    async loginWithEmail(dto: LoginDto) {
+    async loginWithEmail(dto: LoginDto, sessionId: string) {
         const user = await this.usersService.findByEmail(dto.email);
 
         if (!user) {
@@ -30,10 +30,11 @@ export class AuthService {
         return {
             message: 'Đăng nhập thành công',
             user: this.serializeUser(user),
+            sessionId
         };
     }
 
-    async register(dto: RegisterDto) {
+    async register(dto: RegisterDto, sessionId: string) {
         const existing = await this.usersService.findByEmail(dto.email);
         if (existing) {
             throw new BadRequestException('Email đã tồn tại');
@@ -52,6 +53,7 @@ export class AuthService {
         return {
             message: 'Đăng ký thành công',
             user: this.serializeUser(user),
+            sessionId
         };
     }
 
