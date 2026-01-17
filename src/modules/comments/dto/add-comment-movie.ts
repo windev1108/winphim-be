@@ -2,7 +2,13 @@ import { IsNumber, IsString } from 'class-validator';
 
 export class AddCommentMovieDto {
     @IsString()
-    movieId: string;
+    movieThumbnail: string;
+
+    @IsString()
+    movieSlug: string;
+
+    @IsString()
+    movieName: string;
 
     @IsString()
     content: string;

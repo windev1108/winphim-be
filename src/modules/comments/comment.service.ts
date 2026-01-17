@@ -13,7 +13,7 @@ export class CommentService {
     ) { }
 
     async addComment(userId: number, data: AddCommentMovieDto) {
-        const movieExist = await this.commentRepo.findOne({ where: { user: { id: userId }, movieId: data.movieId } });
+        const movieExist = await this.commentRepo.findOne({ where: { user: { id: userId }, movieSlug: data?.movieSlug } });
         if (movieExist) {
             throw new BadRequestException('Bạn đã bình luận phim này rồi!');
         }
@@ -25,11 +25,19 @@ export class CommentService {
         return await this.commentRepo.delete({ user: { id: userId }, id: commentId });
     }
 
+    async deleteMultipleComment(commentIds: number[]) {
+        return await this.commentRepo.delete(commentIds);
+    }
+
     async updateComment(movieId: string, data: EditCommentMovieDto) {
         return await this.commentRepo.update(movieId, { ...data });
     }
 
-    async getCommentByMovie(movieId: string) {
-        return this.commentRepo.find({ where: { movieId }, relations: { user: true } });
+    async getCommentByMovie(movieSlug: string) {
+        return this.commentRepo.find({ where: { movieSlug }, relations: { user: true } });
+    }
+
+    async getMyComments(userId: number) {
+        return this.commentRepo.find({ where: { user: { id: userId } } });
     }
 }

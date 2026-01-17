@@ -7,7 +7,13 @@ export class Comment {
     id: number;
 
     @Column({ type: 'varchar' })
-    movieId: string;
+    movieThumbnail: string;
+
+    @Column({ type: 'varchar' })
+    movieSlug: string;
+
+    @Column({ type: 'varchar' })
+    movieName: string;
 
     @Column({ type: 'varchar', nullable: true })
     content: string;

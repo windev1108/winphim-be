@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, UseGuards, Request, Delete, Param, Put } f
 import { CommentService } from './comment.service';
 import { AddCommentMovieDto } from './dto/add-comment-movie';
 import { AuthGuard } from '../auth/auth.guard';
+import { DeleteMultipleCommentDto } from './dto/delete-comment-movie';
 
 @Controller('comments')
 export class CommentController {
@@ -15,6 +16,13 @@ export class CommentController {
         return { data: movie };
     }
 
+    @Delete('/multiple')
+    @UseGuards(AuthGuard)
+    async deleteMultipleComment(@Body() body: DeleteMultipleCommentDto) {
+        const movie = await this.commentService.deleteMultipleComment(body.commentIds);
+        return { data: movie };
+    }
+
     @Delete('/:id')
     @UseGuards(AuthGuard)
     async deleteCommentMovie(@Request() req, @Param('id') id: number) {
@@ -22,6 +30,7 @@ export class CommentController {
         const movie = await this.commentService.deleteComment(userId, id);
         return { data: movie };
     }
+
 
     @Put('/:id')
     @UseGuards(AuthGuard)
@@ -31,9 +40,18 @@ export class CommentController {
         return { data: movie };
     }
 
-    @Get('movie/:movieId')
-    async getCommentByMovie(@Param('movieId') movieId: string) {
-        const movies = await this.commentService.getCommentByMovie(movieId);
+
+    @Get('/mine')
+    @UseGuards(AuthGuard)
+    async getMyComments(@Request() req) {
+        const userId = req.user.id.toString();
+        const movie = await this.commentService.getMyComments(userId);
+        return { data: movie };
+    }
+
+    @Get('movie/:movieSlug')
+    async getCommentByMovie(@Param('movieSlug') movieSlug: string) {
+        const movies = await this.commentService.getCommentByMovie(movieSlug);
         return { data: movies };
     }
 }

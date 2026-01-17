@@ -2,7 +2,7 @@ import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestEx
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RedisClientType } from 'redis';
-import { REDIS_CLIENT } from '../redis/redis.module';
+// import { REDIS_CLIENT } from '../redis/redis.module';
 import { Cinema, UserRole, ViewerPermission } from 'src/database/entities/cinema.entity';
 import { CreateRoomDto, UpdatePlayerStateDto } from './dto/cinema.dto';
 
@@ -21,7 +21,7 @@ export class CinemaService {
     constructor(
         @InjectRepository(Cinema)
         private readonly roomRepository: Repository<Cinema>,
-        @Inject(REDIS_CLIENT)
+        // @Inject(REDIS_CLIENT)
         private readonly redisClient: RedisClientType,
     ) { }
 
