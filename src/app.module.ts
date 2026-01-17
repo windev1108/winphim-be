@@ -20,6 +20,7 @@ import { CommentModule } from './modules/comments/comment.module';
       entities: [User, Cinema, Movie, Comment],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
+      ssl: { rejectUnauthorized: false },
     }),
     UserModule,
     AuthModule,
