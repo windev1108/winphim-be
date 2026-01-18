@@ -32,17 +32,21 @@ async function bootstrap() {
     console.error('❌ Redis Ping Failed:', error);
     throw error;
   }
+  const isProduction = process.env.NODE_ENV === 'production' ||
+    process.env.RENDER === 'true' || // Render sets this
+    !!process.env.RENDER_SERVICE_NAME; // Alternative check
+
 
   const sessionMiddleware = session({
     store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
-    proxy: true,
+    proxy: isProduction,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 1, // 1 day
     },
     name: 'connect.sid',

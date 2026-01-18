@@ -10,7 +10,6 @@ import {
   HttpCode,
   Query,
   BadRequestException,
-  Session,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,14 +27,36 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body() dto: RegisterDto,
-    @Req() req: any
+    @Req() req: any,
+    @Res() res: any, // ⭐ Thêm @Res để control response
   ) {
     const result = await this.authService.register(dto, req.sessionID);
 
     // Save to session
-    req.session.user = result.user
+    req.session.user = result.user;
 
-    return result;
+    // ⭐ QUAN TRỌNG: Phải save session explicitly
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('❌ Session save error:', err);
+          reject(err);
+        } else {
+          console.log('✅ Session saved successfully:', {
+            sessionID: req.sessionID,
+            user: req.session.user,
+          });
+          resolve();
+        }
+      });
+    });
+
+    // ⭐ Log để debug
+    console.log('📤 Register Response Headers:', {
+      setCookie: res.getHeader('Set-Cookie'),
+    });
+
+    return res.status(HttpStatus.CREATED).json(result);
   }
 
   // -------- EMAIL LOGIN -------------
@@ -43,13 +64,37 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: LoginDto,
-    @Req() req: any
+    @Req() req: any,
+    @Res() res: any, // ⭐ Thêm @Res để control response
   ) {
     const result = await this.authService.loginWithEmail(dto, req.sessionID);
-    // Save to session
-    req.session.user = result.user
 
-    return result;
+    // Save to session
+    req.session.user = result.user;
+
+    // ⭐ QUAN TRỌNG: Phải save session explicitly
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('❌ Session save error:', err);
+          reject(err);
+        } else {
+          console.log('✅ Session saved successfully:', {
+            sessionID: req.sessionID,
+            user: req.session.user,
+            cookie: req.session.cookie,
+          });
+          resolve();
+        }
+      });
+    });
+
+    // ⭐ Log để debug
+    console.log('📤 Login Response Headers:', {
+      setCookie: res.getHeader('Set-Cookie'),
+    });
+
+    return res.status(HttpStatus.OK).json(result);
   }
 
   // -------- GOOGLE LOGIN (POPUP) -------------
@@ -101,7 +146,7 @@ export class AuthController {
       const result = await this.authService.loginWithGoogle(profile);
 
       // Save to session
-      req.session.user = result.user
+      req.session.user = result.user;
 
       await new Promise<void>((resolve, reject) => {
         req.session.save((err: any) => {
@@ -125,7 +170,7 @@ export class AuthController {
         const payload = {
           type: "google-auth-success",
           user: ${JSON.stringify(result.user)},
-          sessionId: "${req.sessionID}"
+          token: "${req.sessionID}"
         };
 
         console.log("🚀 Sending postMessage to:", targetOrigin);
@@ -168,9 +213,15 @@ export class AuthController {
   @Get('me')
   @UseGuards(CustomAuthGuard)
   getProfile(@Req() req) {
+    console.log('🔍 Get Profile - Session:', {
+      sessionID: req.sessionID,
+      user: req.session?.user,
+      cookie: req.headers.cookie,
+    });
+
     return {
       user: req.user,
-      sessionId: req.sessionID,
+      token: req.sessionID,
     };
   }
 
@@ -181,13 +232,22 @@ export class AuthController {
   async logout(@Req() req, @Res() res) {
     req.session.destroy((err: any) => {
       if (err) {
+        console.error('❌ Logout error:', err);
         return res.status(500).json({
           success: false,
           message: 'Logout failed',
         });
       }
 
-      res.clearCookie('connect.sid');
+      res.clearCookie('connect.sid', {
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+      });
+
+      console.log('✅ Logout successful');
+
       return res.json({
         success: true,
         message: 'Đăng xuất thành công!',
