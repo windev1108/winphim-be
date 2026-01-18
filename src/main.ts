@@ -14,23 +14,36 @@ async function bootstrap() {
   // redis client
   const redisClient = createClient({
     url: process.env.REDIS_URL,
+    socket: {
+      reconnectStrategy: (retries) => Math.min(retries * 50, 500),
+    },
   });
 
   redisClient.on('error', (err) => console.error('❌ Redis Client Error', err));
   redisClient.on('connect', () => console.log('✅ Redis Client Connected'));
+  redisClient.on('ready', () => console.log('✅ Redis Ready'));
+  redisClient.on('reconnecting', () => console.log('🔄 Redis Reconnecting'));
   await redisClient.connect();
 
+  try {
+    await redisClient.ping();
+    console.log('✅ Redis Ping Successful');
+  } catch (error) {
+    console.error('❌ Redis Ping Failed:', error);
+    throw error;
+  }
 
   const sessionMiddleware = session({
     store: new RedisStore({ client: redisClient }),
     secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 1, // 1 days
+      maxAge: 1000 * 60 * 60 * 24 * 1, // 1 day
     },
     name: 'connect.sid',
   });
@@ -39,6 +52,15 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  app.use((req: any, _res: any, next: any) => {
+    console.log('🔍 Session Debug:', {
+      sessionID: req.sessionID,
+      session: req.session,
+      cookies: req.cookies,
+      headers: req.headers.cookie,
+    });
+    next();
+  });
   // socket.io
   const httpServer = app.getHttpServer();
 
@@ -61,10 +83,11 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(','),
+    origin: process.env.CORS_ORIGIN?.split(',').map(o => o.trim()),
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
   });
 
   const config = new DocumentBuilder()
