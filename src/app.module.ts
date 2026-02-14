@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MovieModule } from './modules/movies/movie.module';
 import { Comment } from './database/entities/comment.entity';
 import { CommentModule } from './modules/comments/comment.module';
+import { HealthModule } from './modules/health/health.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,7 +26,8 @@ import { CommentModule } from './modules/comments/comment.module';
     UserModule,
     AuthModule,
     MovieModule,
-    CommentModule
+    CommentModule,
+    HealthModule
   ],
 })
 export class AppModule { }
